@@ -213,6 +213,23 @@ body {
   50% { filter: drop-shadow(0 0 32px var(--glow-long)); }
 }
 
+/* 完成态脉冲 */
+.timer-ring-wrap.completed .timer-time {
+  animation: completed-pulse 1s ease-in-out infinite;
+}
+.timer-ring-wrap.completed .timer-ring {
+  filter: drop-shadow(0 0 28px var(--glow-work));
+}
+.timer-ring-wrap.completed .timer-label {
+  color: var(--accent-work);
+  font-weight: 700;
+}
+
+@keyframes completed-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.08); }
+}
+
 .ring-bg {
   fill: none;
   stroke: rgba(255, 255, 255, 0.05);

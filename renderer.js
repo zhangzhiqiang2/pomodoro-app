@@ -15,10 +15,15 @@ let totalSeconds = config.work * 60;
 let remainingSeconds = totalSeconds;
 let running = false;
 let timerId = null;
+let startTimestamp = 0;       // 上次启动/恢复时的 Date.now()
+let expectedRemaining = 0;    // 上次启动/恢复时的剩余秒数
 let todayCount = 0;
 let todayMinutes = 0;
 let tasksDoneToday = 0;
 let consecutivePomodoros = 0;
+let completed = false;        // 计时结束后的"时间到"状态
+let pendingMode = null;        // 待切换的下个模式
+let completedTimerId = null;   // 自动切换倒计时
 
 // 任务列表
 let tasks = [];
@@ -120,16 +125,19 @@ function render() {
   statTasks.textContent = tasksDoneToday;
 }
 
-// 计时逻辑
+// 计时逻辑（基于 Date.now()，避免窗口隐藏时 setInterval 节流导致不准确）
 function tick() {
+  if (!running) return;
+  const elapsed = Math.floor((Date.now() - startTimestamp) / 1000);
+  remainingSeconds = Math.max(0, expectedRemaining - elapsed);
   if (remainingSeconds <= 0) {
     clearInterval(timerId);
     timerId = null;
     running = false;
+    startTimestamp = 0;
     onTimerEnd();
     return;
   }
-  remainingSeconds--;
   render();
 }
 
@@ -137,38 +145,64 @@ function onTimerEnd() {
   timerRingWrap.classList.remove('running');
   const wasWork = currentMode === 'work';
 
+  playFinishSound(wasWork);
+
+  completed = true;
+  timerTime.textContent = '00:00';
+  timerLabel.textContent = '时间到！';
+  timerRingWrap.classList.add('completed');
+
   if (wasWork) {
     todayCount++;
     todayMinutes += config.work;
     saveStats();
-    playFinishSound(true);
     consecutivePomodoros++;
-    const nextMode = (consecutivePomodoros % 4 === 0) ? 'long-rest' : 'short-rest';
-    const modeName = nextMode === 'long-rest' ? '长休息' : '短暂休息';
+    pendingMode = (consecutivePomodoros % 4 === 0) ? 'long-rest' : 'short-rest';
+    const modeName = pendingMode === 'long-rest' ? '长休息' : '短暂休息';
     ipcRenderer.send('notify', {
       title: '专注完成！',
       body: `太棒了！完成第 ${todayCount} 个番茄 🍅，开始${modeName}吧。`,
     });
-    switchMode(nextMode);
+    completedTimerId = setTimeout(() => {
+      completed = false;
+      timerRingWrap.classList.remove('completed');
+      switchMode(pendingMode);
+    }, 3000);
   } else {
-    playFinishSound(false);
+    pendingMode = 'work';
     ipcRenderer.send('notify', {
       title: '休息结束！',
       body: '准备好了吗？开始下一个专注时段吧 💪',
     });
-    switchMode('work');
+    completedTimerId = setTimeout(() => {
+      completed = false;
+      timerRingWrap.classList.remove('completed');
+      switchMode(pendingMode);
+    }, 3000);
   }
 }
 
 function startTimer() {
+  // 时间到状态：点击立即进入下一阶段
+  if (completed) {
+    completed = false;
+    if (completedTimerId) clearTimeout(completedTimerId);
+    timerRingWrap.classList.remove('completed');
+    switchMode(pendingMode);
+    return;
+  }
+
   if (running) {
     clearInterval(timerId);
     timerId = null;
     running = false;
+    startTimestamp = 0;
     timerRingWrap.classList.remove('running');
     ipcRenderer.send('timer-state', 'idle');
   } else {
     running = true;
+    startTimestamp = Date.now();
+    expectedRemaining = remainingSeconds;
     timerId = setInterval(tick, 1000);
     timerRingWrap.classList.add('running');
     ipcRenderer.send('timer-state', currentMode === 'work' ? 'work' : 'rest');
@@ -181,13 +215,23 @@ function resetTimer() {
   clearInterval(timerId);
   timerId = null;
   running = false;
+  startTimestamp = 0;
+  completed = false;
+  pendingMode = null;
+  if (completedTimerId) clearTimeout(completedTimerId);
   timerRingWrap.classList.remove('running');
+  timerRingWrap.classList.remove('completed');
   remainingSeconds = totalSeconds;
   ipcRenderer.send('timer-state', 'idle');
   render();
 }
 
 function switchMode(mode) {
+  completed = false;
+  pendingMode = null;
+  if (completedTimerId) clearTimeout(completedTimerId);
+  timerRingWrap.classList.remove('completed');
+
   currentMode = mode;
   if (mode === 'work') totalSeconds = config.work * 60;
   else if (mode === 'short-rest') totalSeconds = config.shortRest * 60;
@@ -311,9 +355,17 @@ function saveStats() {
 btnStart.addEventListener('click', startTimer);
 btnReset.addEventListener('click', resetTimer);
 btnSkip.addEventListener('click', () => {
+  if (completed) {
+    completed = false;
+    if (completedTimerId) clearTimeout(completedTimerId);
+    timerRingWrap.classList.remove('completed');
+    switchMode(pendingMode);
+    return;
+  }
   clearInterval(timerId);
   timerId = null;
   running = false;
+  startTimestamp = 0;
   onTimerEnd();
 });
 
