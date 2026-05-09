@@ -1,0 +1,36 @@
+{
+  "hooks": {
+    "PostToolBatch": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -Command \"[System.Media.SystemSounds]::Asterisk.Play()\""
+          },
+          {
+            "type": "command",
+            "async": true,
+            "command": "powershell -NoProfile -Command \"Invoke-RestMethod -Uri 'https://open.feishu.cn/open-apis/bot/v2/hook/7ae7ceee-4303-4e8b-9524-cec70d2ac35b' -Method Post -ContentType 'application/json; charset=utf-8' -Body ([System.Text.Encoding]::UTF8.GetBytes((ConvertTo-Json @{msg_type='text';content=@{text='✅ Claude Code 任务完成'}} -Compress)))\""
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "powershell -ExecutionPolicy Bypass -File \".claude\\statusline.ps1\"",
+    "refreshInterval": 30
+  },
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem *)",
+      "Bash(Get-Content *)",
+      "Bash(Test-Path *)",
+      "Bash(Select-String *)",
+      "Bash(Get-Item *)",
+      "Bash(Get-Process *)",
+      "Bash(npm view *)",
+      "Bash(npm pack --dry-run *)"
+    ]
+  }
+}

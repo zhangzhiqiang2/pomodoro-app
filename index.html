@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>番茄钟</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- 背景装饰 -->
+  <div class="bg-pattern"></div>
+  <div class="bg-glow"></div>
+
+  <!-- 主卡片 -->
+  <div class="card">
+
+    <!-- 自定义标题栏 -->
+    <div class="titlebar">
+      <span class="titlebar-title">番茄钟</span>
+      <div class="titlebar-btns">
+        <button class="title-btn" id="btn-minimize" title="最小化到托盘">─</button>
+        <button class="title-btn title-btn-close" id="btn-close" title="关闭到托盘">✕</button>
+      </div>
+    </div>
+
+    <!-- 模式标签 -->
+    <div class="mode-tabs">
+      <button class="tab active" data-mode="work">专注</button>
+      <button class="tab" data-mode="short-rest">短休息</button>
+      <button class="tab" data-mode="long-rest">长休息</button>
+    </div>
+
+    <!-- 计时器圆圈 -->
+    <div class="timer-section">
+      <div class="timer-ring-wrap">
+        <svg class="timer-ring" viewBox="0 0 200 200">
+          <circle class="ring-bg" cx="100" cy="100" r="88" />
+          <circle class="ring-progress" id="ring-progress" cx="100" cy="100" r="88"
+            stroke-dasharray="553" stroke-dashoffset="0" />
+        </svg>
+        <div class="timer-display">
+          <div class="timer-time" id="timer-time">25:00</div>
+          <div class="timer-label" id="timer-label">专注时间</div>
+        </div>
+      </div>
+
+      <!-- 控制按钮 -->
+      <div class="controls">
+        <button class="ctrl-btn" id="btn-reset" title="重置">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        </button>
+        <button class="ctrl-btn primary" id="btn-start">
+          <svg class="play-icon" id="play-icon" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          <svg class="pause-icon" id="pause-icon" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style="display:none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+        </button>
+        <button class="ctrl-btn" id="btn-skip" title="跳过">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- 任务列表 -->
+    <div class="task-section">
+      <div class="task-header">
+        <span class="task-title">任务</span>
+        <span class="task-count" id="task-count">0</span>
+      </div>
+      <div class="task-input-row">
+        <input class="task-input" id="task-input" type="text" placeholder="添加新任务..." maxlength="100" />
+        <button class="task-add-btn" id="task-add-btn">+</button>
+      </div>
+      <div class="task-list" id="task-list"></div>
+    </div>
+
+    <!-- 今日统计 -->
+    <div class="stats">
+      <div class="stat-item">
+        <span class="stat-val" id="stat-count">0</span>
+        <span class="stat-lbl">今日番茄</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-val" id="stat-minutes">0</span>
+        <span class="stat-lbl">专注分钟</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-val" id="stat-tasks">0</span>
+        <span class="stat-lbl">完成任务</span>
+      </div>
+    </div>
+
+    <!-- 设置 -->
+    <div class="settings-bar">
+      <button class="settings-toggle" id="btn-settings">⚙ 自定义时长</button>
+    </div>
+    <div class="settings-panel" id="settings-panel">
+      <div class="setting-row">
+        <label>专注时长（分钟）</label>
+        <input type="number" id="inp-work" min="1" max="90" value="25" />
+      </div>
+      <div class="setting-row">
+        <label>短休息（分钟）</label>
+        <input type="number" id="inp-short" min="1" max="30" value="5" />
+      </div>
+      <div class="setting-row">
+        <label>长休息（分钟）</label>
+        <input type="number" id="inp-long" min="1" max="60" value="15" />
+      </div>
+      <button class="btn-save" id="btn-save-settings">保存</button>
+    </div>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
